@@ -1,0 +1,3 @@
+section="Internal Project Info",
+minutes.html(navtitle="Meeting minutes"),
+testcluster.html(navtitle="Test cluster"),

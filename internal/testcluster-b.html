@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<title>Skywriting - Internal Project Info</title>
+<body>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-377063-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+<h1>Local test cluster</h1>
+
+<h2>General Information</h2>
+<p>The cluster comprises of <samp class="code">bombjack</samp>, <samp class="code">breakout</samp>, <samp class="code">galaxian</samp>, <samp class="code">gunfighter</samp>, <samp class="code">aosda</samp>, <samp class="code">lochain</samp> and <samp class="code">tarmachen</samp>, 5 of which are Dell 1425's, 2 (the B's) being Dell 2650's.</p>
+
+<p>All are running Ubuntu 10.04 and have Skywriting installed in <samp class="sh">/opt/skywriting/</samp>. Management scripts (for running masters, workers etc.) are in <samp class="sh">/opt/skywriting/scripts/</samp>.</p>
+
+<p>To use <samp class="code">ssh</samp> to connect to these machines, use their first Ethernet port's DNS name and the <samp class="code">xeno.cl.cam.ac.uk</samp> subdomain, e.g. <samp class="sh">ssh <em>breakout-0.xeno</em></samp>.</p>
+
+
+<h2>Using the cluster</h2>
+
+<p>All helper scripts for cluster management are currently in <samp class="sh">/usr/groups/netos/skywriting/srgcluster/</samp>.</p>
+
+
+<h3>Power control</h3>
+
+<p>The cluster machines can be turned on or off using the <samp class="sh">srgcluster-boot.sh</samp> and <samp class="sh">srgcluster-shutdown.sh</samp> scripts. They either take a list of machine names (one per line) from STDIN or a file specified using the <samp class="sh">-f</samp> option.</p>
+
+<p><em>Example:</em><br />
+<pre class="sh">
+$ <kbd>./srgcluster-boot.sh</kbd> <em>-f</em> <var>cluster.txt</var>
+$ <kbd>./srgcluster-boot.sh</kbd> &lt; <var>cluster.txt</var>
+$ <kbd>./srgcluster-boot.sh</kbd>
+<var>bombjack-0.xeno
+breakout-0.xeno</var>
+^D
+</pre>
+
+
+<h3>Launching the interpreter</h3>
+
+<p>In order to be able to run jobs on the cluster, we need to lauch a master and some workers. For this purpose, <samp class="sh">sw-launch-cluster</samp> is used. This script takes a list of machine names (one per line) from STDIN or a file specified using the <samp class="sh">-f</samp> option as its argument and processes the list as follows:</p>
+<ul>
+   <li>A <em>master</em> is launched on the machine on the first line,
+   <li>and <em>workers</em> on all other machines.
+</ul>
+
+<p>Further options are:</p>
+<ul>
+   <li><samp class="sh">-i <var>keyfile</var></samp> or <samp class="sh">-k <var>keyfile</var></samp>: Specifies a private key to use for login to the cluster machines. The default is <samp class="sh">sw-masterkey</samp> in <samp class="sh">/usr/groups/netos/skywriting/srgcluster/</samp>.
+   <li><samp class="sh">-r <var>swroot</var></samp>: Specifies the root directory of the Skywriting installation on the cluster machines. Defaults to <samp class="sh">/opt/skywriting/</samp>.
+   <li><samp class="sh">-u <var>swuser</var></samp>: Specifies the user to use for login to the cluster machines. Defaults to <samp class="sh">root</samp>.
+   <li><samp class="sh">-v</samp>: Enables verbose mode (output from remote machines is not surpressed; useful for debugging).
+   <li><samp class="sh">-w</samp>: Wipes the job journal before running the master (i.e. does not attempt to recover previous jobs).
+</ul>
+
+<p><em>Example:</em><br />
+<pre class="sh">
+$ <kbd>./sw-launch-cluster</kbd> -i <var>sw-masterkey</var> -f <var>cluster.txt</var>
+Setting up instance 0 (bombjack-0.xeno.cl.cam.ac.uk) ... as a master.
+Setting up instance 1 (breakout-0.xeno.cl.cam.ac.uk) ... as a worker for bombjack-0.xeno.cl.cam.ac.uk
+</pre>
+
+<p>The operability of the cluster can be verified by GET-ing from <samp class="sh">http://<var>$MASTER</var>:<var>$PORT</var>/worker/</samp>, which should return a JSON-encoded Python object describing one or more workers that have connected to the master.</p>
+
+
+<h3>Updating the cluster</h3>
+
+<p>It is advisable to ensure that all machines in the cluster run the same version of Skywriting both to ensure consistency and to avoid errors. Thus running, <samp class="sh">sw-update-cluster</samp> on a cluster of unknown state is good practice. This script, as usual, takes a list of machine names (one per line) from STDIN or a file specified using the <samp class="sh">-f</samp> option as its argument and invokes a <samp class="sh">git pull</samp> operation in the Skywriting directory on all cluster machines. The other options of <samp class="sh">sw-update-cluster</samp> are identical to the ones of <samp class="sh">sw-launch-cluster</samp>, apart from <samp class="sh">-w</samp>, which does not exist.</p>
+
+
+<h3>Running jobs</h3>
+
+<p>Use <samp class="sh">sw-job</samp> to run jobs on the cluster, as documented in the Skywriting technical reference.</p>
+
+<p><em>Example:</em><br />
+<pre class="sh">
+$ <kbd>./sw-job</kbd> -m <var>http://bombjack-0.xeno.cl.cam.ac.uk:8000</var> <var>wordcount.sw</var>
+[...]
+</pre>
+
+
+<h3>Stopping the cluster</h3>
+
+<p>After finishing the job(s), the cluster should be disabled and potentially shut down to save the planet. For this purpose, <samp class="sh">sw-stop-cluster</samp> is used. This script takes a list of machine names (one per line) from STDIN or a file specified using the <samp class="sh">-f</samp> option as its argument and performs the appropriate Skywriting calls (HTTP GETs) to shut down the master and all workers. The <samp class="sh">-v</samp> option can be used to enable output from the remote processes.</p>
+
+<p>Finally, using the <samp class="sh">srgcluster-shutdown.sh</samp> script, the machines can be turned off (see &quot;Power Control&quot; above).</p>
+
+
+<h2>Deployment / Adding more machines</h2>
+<p>For easier deployment to future machines, some useful scripts are in <samp class="sh">/usr/groups/netos/skywriting/srgcluster/</samp>: the crucial one is <samp class="code">sw-deploy.sh</samp>, which can be used to transform a vanilla Linux installation (currently only Ubuntu is actively supported) into a Skywriting node in a fully-automated fashion :-)<br />
+There's also the <samp class="code">sw-masterkey</samp> keypair, which can be used to log into all machines deployed using <samp class="code">sw-deploy</samp>.
+</p>
+
+<p><samp class="code">sw-deploy</samp>'s usage is simple: <samp class="sh">sw-deploy.sh hostname privkey [sw-user] [sw-userpass]</samp>, where <samp class="code">hostname</samp> is the target host name, <samp class="code">privkey</samp> is the private key of the key pair to be used for login to the machine (a public key is assumed to be in the same place as the private key, with extension <samp class="code">.pub</samp>), and optional parameters <samp class="code">sw-user</samp> and <samp class="code">sw-userpass</samp> are the username and password to be used to log into the machine, defaulting to <samp class="code">root</samp> and the usual SRG test machine root password.</p>
+
+</body>

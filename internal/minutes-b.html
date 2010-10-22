@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title>Tutorial: Running a Ciel job</title>
+<title>Skywriting - Internal Project Info</title>
 <body><style>
 .codehilite .hll { background-color: #ffffcc }
 .codehilite  { background: #f0f0f0; }
@@ -63,10 +63,6 @@
 .codehilite .vg { color: #bb60d5 } /* Name.Variable.Global */
 .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
 .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
-
-.ciel {
-   font-variant: small-caps;
-}
 </style>
 <script type="text/javascript">
 
@@ -81,66 +77,61 @@
   })();
 
 </script>
-<h1>Tutorial: Running a <span class="ciel">Ciel</span> job</h1>
-<p><em>This is a work-in-progress page and probably not ready for general consumption yet</em></p>
 
-<p>Here's a quick guide to running a Skywriting script with the current versions of Skywriting/<span class="ciel">Ciel</span>.</p>
+<h1>Weekly actions / Meeting notes</h1>
 
-<h2>Launching the master</h2>
+<h2>Week starting 01/09/2010</h2>
 
-<p>First, you need to set your <samp class="code">PYTHONPATH</samp> and <samp class="code">CLASSPATH</samp> environment variables to point to the right places. <br />
-In the following, we assume that an environment variable <samp class="code">$CLROOT</samp> is set to point to the root directory of your installation (you can do <samp class="sh">export CLROOT=<var>/path/to/checkout/ciel/</var></samp> to achieve that).</p>
+<p><em>No meeting as (almost) everyone was away.</em></p>
 
-<pre class="sh">
-$ export PYTHONPATH=$CLROOT/src/python/
-$ export CLASSPATH=$CLROOT/src/java/JavaBindings.jar
-</pre>
+<h2>Week starting 25/08/2010</h2>
 
-<p>Then we launch the master. Note that the subfolders &quot;logs&quot;, &quot;store&quot; and &quot;journal&quot; need to be created in <samp class="code">$CLROOT</samp> in order for this to work. (&quot;journal&quot; holds fault tolerance information for the master, &quot;store&quot; is the <span class="ciel">Ciel</span> block store and &quot;logs&quot; holds, well, logs ;-)):</p>
+<p><em>[No minutes].</em></p>
 
-<pre class="sh">
-$ $CLROOT/scripts/sw-master -p 8000 -j $CLROOT/journal/ -b $CLROOT/store/ --staticbase ${CLROOT}/src/js/skyweb/ 2>&1 2>${CLROOT}/logs/master.log &
-</pre>
+<h2>Week starting 18/08/2010</h2>
 
-<p>This will run the master in the background and write (almost) all output to &quot;logs/master.log&quot; instead of your terminal, which is useful in some cases. Alternatively, you can skip the &quot;2>&1 2>${CLROOT}/logs/master.log&quot; bit and just run master, worker and job submission in different terminals (probably a good idea for testing).</p>
+<p><em>Quoting Steve:</em><br />
+&quot;Most of the meeting focused on a discussion about how to
+manage &quot;fault tolerance&quot; in the general sense, with a particular focus on
+how we might be able to avoid redoing work after a failure [for now, think
+of this as a fail stop master failure]. The general idea was to have one or
+more write-ahead logs which captured the { completed, in-progress, and
+not-started } state of the world. At least one WAL would deal with tasks,
+i.e which tasks had been started, which completed/committed, etc. An
+unanswered question was whether or not this would be the only kind of
+information recorded, or whether some separate WAL (or sim) would hold
+information about the various bits of information held in storage blocks on
+various nodes in the cluster. In the former case (task log only), data items
+can be reconstructed by working out which tasks committed on which workers,
+and hence locating the data on their disks (subject to the worker in
+question being currently available). In the latter case, the task log would
+note the generation of items of a certain UUID, but a separate structure
+would record the mapping from UUID to a set of potential locations. The
+former one is simpler, but the latter gives more flexibility (certainly if
+we're trying for memoization/caching across jobs). We didn't come to a
+decision about which to use...&quot;   </p>
+<ul>
+   <li><b>Chris</b>: continue trying to performance debug stuff; 
+   <li><b>Derek</b>: continue improving the code base and think about/write down something for the FT/memorization story; 
+   <li><b>Anil</b>: think/investigate the mirageOS meets SW stuff
+</ul>
 
-<h2>Launching a worker</h2>
 
-<p>The worker also needs the environment variables mentioned above, so if you are running him in a different terminal, make sure you do the exports first. Again, remove the bit at the end to output to the terminal and run in the foreground.</p>
+<h2>Week starting 11/08/2010</h2>
+<ul>
+   <li><b>Derek</b>: Continue extending the <a href="http://www.cl.cam.ac.uk/~dgm36/skywriting-tr.pdf">TR document</a>, execute coding tasks and fix fault-tolerance issues
+   <li><b>Malte</b>: Cluster launch/shutdown and general utility scripts, extend documentation <em>[away from 13/08 to 01/09, but with email access and able to do work]</em>
+   <li><b>Chris</b>: Get sort/wordcount to run on the cluster and do some sanity-checking/profiling
+   <li><b>Steven S.</b>: <em>no current actions</em>
+   <li><b>Anil</b>: Think about <a href="http://www.cl.cam.ac.uk/~dgm36/skywriting-tr.pdf">Derek's document</a>, potentially investigate Mirage-based executors as a means of running multiple Skywriting nodes on one physical machine
+</ul>
 
-<pre class="sh">
-$ $CLROOT/scripts/sw-worker -m 'http://localhost:8000' -p 8001 -b $CLROOT/store/ --staticbase $CLROOT/src/js/skyweb_worker/ 2>&1 2>${CLROOT}/logs/worker.log &
-</pre>
-
-<p>More workers can be launched in the same way, but on different ports. The above command will launch the worker on port 8001 and connect it to the master on port 8000. You can launch more workers on ports 8002, 8003 and so on.</p>
-
-
-<h2>Running a job</h2>
-
-<p>Then simply run:</p>
-
-<pre class="sh">
-$ $CLROOT/scripts/sw-job -m http://localhost:8000 $CLROOT/src/sw/script.sw
-</pre>
-
-<p>That should (hopefully!) come back with something like this:</p>
-
-<pre class="sh">
-default STARTED 1285777816.34
-default FINISHED_PARSING 1285777816.36
-default SUBMITTED_CONT 1285777816.38
-default SUBMITTED_JOB 1285777816.42
-default JOB_URL http://localhost:8000/browse/job/d794825a-cbe6-11df-b413-00e0814a4875
-default GOT_RESULT 1285777819.66
-SW2_ConcreteReference('d795275a-cbe6-11df-b413-00e0814a4875', &lt;skywriting.runtime.references.SWTaskOutputProvenance instance at 0x2014e18&gt;, 164, set(['ganymede.cl.cam.ac.uk:8001']))
-</pre>
-
-<p>If you open that URL in a browser, you should see the rudimentary web interface - try just exploring it a bit by clicking the links. Clicking on the root task link (first link), you should see a list of tasks with their current states.</p>
-
-<h2>Advanced stuff</h2>
-
-<p>You can edit the file in <samp class="code">$CLROOT/src/sw/pi.sw</samp> to see what a Skywriting script looks like, and you can change some of the variables in it (e.g. &quot;num_samples&quot;) to change the job parameters (more samples mean that each task does more work, more mappers mean more tasks).</p>
-
-<p>That should be it for now &ndash; please do get in touch with us if you are running into problems getting things work, or if you have any questions!</p>
+<h2>Week starting 04/08/2010</h2>
+<ul>
+   <li><b>Derek</b>: Write internal TR document detailing the state of SW in different areas
+   <li><b>Malte</b> and <b>Chris</b>: Set up Dell 1425's in SE18 and FN11 as Skywriting test cluster
+   <li><b>Steven S.</b>: <em>no current actions</em>
+   <li><b>Anil</b>: <em>[away]</em>
+</ul>
 
 </body>

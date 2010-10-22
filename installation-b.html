@@ -63,6 +63,10 @@
 .codehilite .vg { color: #bb60d5 } /* Name.Variable.Global */
 .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
 .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
+
+.ciel {
+   font-variant: small-caps;
+}
 </style>
 <script type="text/javascript">
 
@@ -78,61 +82,79 @@
 
 </script>
 <h1>Getting Started</h1>
-<h2>Downloading</h2>
-<p>Development versions of Skywriting are stored on <a href="http://github.com">Github</a>, with the main repository available <a href="http://github.com/mrry/skywriting">here</a>:</p>
-<div class="codehilite"><pre>$ git checkout http://github.com/mrry/skywriting.git</pre></div>
 
+<h2>Installing</h2>
+<p>Do a git checkout (using <samp class="sh">git clone http://github.com/mrry/ciel</samp> from the repository.<br />
 
-<p>Check this repository out, and then compile and install it using PyPi:</p>
-<div class="codehilite"><pre>$ python setup.py install</pre></div>
+<span class="ciel">Ciel</span> requires Python 2.6. You will also need python modules <samp class="code">cherrypy3</samp>, <samp class="code">pycurl</samp>, <samp class="code">httplib2</samp>, <samp class="code">ply</samp> and <samp class="code">simplejson</samp>. Depending on your operating system, the procedure for installing these will be slightly different. As a rough guide, DEB-based Linux distributions should be able to install them from package repositories, otherwise Python's <samp class="sh">easy_install</samp> command may help. There are some known issues with installing on a Mac OS X machine, making the process a bit more difficult (even though it does work). 
 
+<p>Check the repository out, and then compile and install it using PyPi:</p>
+<pre class="sh">$ python setup.py install</pre>
 
-<p>This will install the Python libraries, as well as the helper scripts <code>sw-master</code>, <code>sw-worker</code> and <code>sw-job</code>, which are explained below.</p>
-<p>TODO: java setup</p>
+<p>This will install the Python libraries, as well as the helper scripts, which are explained below.</p>
+<p>For most of the examples, you will also need a Java Runtime Environment (>1.6) to be installed. If you do not have one already, install it now.</p>
+
 <h2>Concepts</h2>
-<p>Skywriting uses a master/worker architecture, and so you will need to set up a single master instance, and as many workers as you have machines/cores in your cluster.
+<p><samp class="ciel">Ciel</samp> uses a master/worker architecture, and so you will need to set up a single master instance, and as many workers as you have machines/cores in your cluster.
 Communication between these instances happens using HTTP POST and a simple JSON RPC format.</p>
+
 <h3>Master Setup</h3>
+
+<p>First, you need to set your <samp class="code">PYTHONPATH</samp> and <samp class="code">CLASSPATH</samp> environment variables to point to the right places. <br />
+In the following, we assume that an environment variable <samp class="code">$CLROOT</samp> is set to point to the root directory of your installation (you can do <samp class="sh">export CLROOT=<var>/path/to/checkout/ciel/</var></samp> to achieve that).</p>
+
+<pre class="sh">
+$ export PYTHONPATH=$CLROOT/src/python/
+$ export CLASSPATH=$CLROOT/src/java/JavaBindings.jar
+</pre>
+
+<p>Note that the subfolders &quot;logs&quot;, &quot;store&quot; and &quot;journal&quot; need to be created in <samp class="code">$CLROOT</samp> in order for this to work. (&quot;journal&quot; holds fault tolerance information for the master, &quot;store&quot; is the <span class="ciel">Ciel</span> block store and &quot;logs&quot; holds log files).</p>
+
 <p>The <code>sw-master</code> command sets up a master server listening on a port, using the fully-qualified domain name of the host.</p>
-<div class="codehilite"><pre>$ sw-master [-p port]</pre></div>
+<pre class="sh">$ sw-master -b &lt;blockstore&gt; [-j &lt;journaldir&gt;] [-p &lt;port&gt;] [--staticbase &lt;webdir&gt;] </pre>
 
+<p>Note that it does not listen on <samp class="code">localhost</samp> by default, and so you should use the FQDN to address the node.
+It defaults to port <samp class="code">8080</samp>, and do not forget to open up a hole in your firewall so that other worker nodes in the cluster can also see the master.</p>
 
-<p>Note that it does not listen on <code>localhost</code> by default, and so you should use the FQDN to address the node.
-It defaults to port <code>8080</code>, and do not forget to open up a hole in your firewall so that other worker nodes in the cluster can also see the master.</p>
 <h3>Worker Setup</h3>
+
 <p>Each worker runs on its own process and port, where it listens for jobs to be dispatched to it by the master process.
 Workers need to be able to see the master port, and also to receive connections from the master server, so ensure your firewall is suitably configured.
-Workers never directly communication with each other.</p>
+Workers never directly communicate with each other.</p>
 <p>To get started with a single worker, type in:</p>
-<div class="codehilite"><pre>$ sw-worker -m &lt;master uri&gt; -p &lt;port&gt;</pre></div>
+<pre class="sh">$ sw-worker -b &lt;blockstore&gt; -m &lt;master uri&gt; -p &lt;port&gt;</pre>
 
 
 <h3>Job Submission</h3>
-<p>Now that you have a master and some workers, it is time to submit a job for parallel processing.  There is a script to get you started in <code>src/sw/helloworld.sw</code>:</p>
-<div class="codehilite"><pre>function hello(who) {
+
+<p>Now that you have a master and some workers, it is time to submit a job for parallel processing.  There is a script to get you started in <samp class="code">src/sw/helloworld.sw</samp>:</p>
+
+<pre class="code">function hello(who) {
     return &quot;hello &quot; + who;
 }
 
 greeting = spawn(hello,[&quot;world&quot;]);
-return *greeting;</pre></div>
-
+return *greeting;</pre>
 
 <p>This illustrates the Javascript-like syntax of Skywriting, and spawns a task which return a static greeting string.
 Of course, you could return the string directly without the intermediate function, but using one lets us test that your master/worker setup is functioning correctly.</p>
-<p>Submit the job by running:</p>
-<div class="codehilite"><pre>$ sw-job -m &lt;master uri&gt; &lt;script file&gt;</pre></div>
 
+<p>Submit the job by running:</p>
+<pre class="sh">$ sw-job -m &lt;master uri&gt; &lt;script file&gt;</pre>
 
 <p>Currently a lot of debugging information gets emitted, this will be quietened as development settles down.</p>
+
 <h3>Interactive Console</h3>
-<p>There is also an interactive console you can use to evaluate Skywriting scripts directly. The <code>sw-console</code> script connects to a master, just like a worker does, and drops you into an interactive shell.</p>
-<div class="codehilite"><pre>$ sw-console --master http://click.local:8080
+
+<p>There is also an interactive console you can use to evaluate Skywriting scripts directly. The <samp class="code">sw-console</samp> script connects to a master, just like a worker does, and drops you into an interactive shell.</p>
+<pre class="sh">$ <kbd>sw-console --master http://<var>click.local:8080</var></kbd>
 (Cmd) function hello() { return &quot;hello world&quot;; }
 &lt;mrry.mercator.runtime.references.SWNullReference instance at 0x101369b48&gt;
 (Cmd) x=spawn(hello,[]);
 &lt;mrry.mercator.runtime.references.SWNullReference instance at 0x1013698c0&gt;
 (Cmd) return *x;
-hello world</pre></div>
+hello world</pre>
 
+<p>The console itself is a wrapper to the job submission interface, so you still need to have workers connected to run the interactive commands as you type them in.  If a worker is not available, the console will block until the job is completed.</p>
 
-<p>The console itself is a wrapper to the job submission interface, so you still need to have workers connected to run the interactive commands as you type them in.  If a worker is not available, the console will block until the job is completed.</p></body>
+</body>

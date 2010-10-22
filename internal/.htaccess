@@ -1,0 +1,3 @@
+AuthType Ucam-WebAuth
+AuthName "Skywriting internal pages"
+Require user ms705 dgm36 cs448 avsm2 smh22 sos22 tjd21

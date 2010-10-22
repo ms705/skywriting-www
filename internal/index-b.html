@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<title>Tutorial: Running a Ciel job</title>
+<title>Skywriting - Internal Project Info</title>
 <body><style>
 .codehilite .hll { background-color: #ffffcc }
 .codehilite  { background: #f0f0f0; }
@@ -63,10 +63,6 @@
 .codehilite .vg { color: #bb60d5 } /* Name.Variable.Global */
 .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
 .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
-
-.ciel {
-   font-variant: small-caps;
-}
 </style>
 <script type="text/javascript">
 
@@ -81,66 +77,24 @@
   })();
 
 </script>
-<h1>Tutorial: Running a <span class="ciel">Ciel</span> job</h1>
-<p><em>This is a work-in-progress page and probably not ready for general consumption yet</em></p>
+<h1>Skywriting &ndash; Internal Project Info</h1>
 
-<p>Here's a quick guide to running a Skywriting script with the current versions of Skywriting/<span class="ciel">Ciel</span>.</p>
+<h2>Meetings</h2>
 
-<h2>Launching the master</h2>
+<p>Meetings at <em>14:00</em> every Wednesday, location TBA.</p>
 
-<p>First, you need to set your <samp class="code">PYTHONPATH</samp> and <samp class="code">CLASSPATH</samp> environment variables to point to the right places. <br />
-In the following, we assume that an environment variable <samp class="code">$CLROOT</samp> is set to point to the root directory of your installation (you can do <samp class="sh">export CLROOT=<var>/path/to/checkout/ciel/</var></samp> to achieve that).</p>
+<p><b>&raquo;</b> See minutes and actions from <a href="minutes.html">previous meetings</a>.</p>
 
-<pre class="sh">
-$ export PYTHONPATH=$CLROOT/src/python/
-$ export CLASSPATH=$CLROOT/src/java/JavaBindings.jar
-</pre>
+<h2>Test cluster</h2>
 
-<p>Then we launch the master. Note that the subfolders &quot;logs&quot;, &quot;store&quot; and &quot;journal&quot; need to be created in <samp class="code">$CLROOT</samp> in order for this to work. (&quot;journal&quot; holds fault tolerance information for the master, &quot;store&quot; is the <span class="ciel">Ciel</span> block store and &quot;logs&quot; holds, well, logs ;-)):</p>
+<p>We have a 7-machine local test cluster (currently). More documentation on how to operate it can be found <a href="testcluster.html">here</a>.</p>
 
-<pre class="sh">
-$ $CLROOT/scripts/sw-master -p 8000 -j $CLROOT/journal/ -b $CLROOT/store/ --staticbase ${CLROOT}/src/js/skyweb/ 2>&1 2>${CLROOT}/logs/master.log &
-</pre>
+<h2>Documentation</h2>
 
-<p>This will run the master in the background and write (almost) all output to &quot;logs/master.log&quot; instead of your terminal, which is useful in some cases. Alternatively, you can skip the &quot;2>&1 2>${CLROOT}/logs/master.log&quot; bit and just run master, worker and job submission in different terminals (probably a good idea for testing).</p>
-
-<h2>Launching a worker</h2>
-
-<p>The worker also needs the environment variables mentioned above, so if you are running him in a different terminal, make sure you do the exports first. Again, remove the bit at the end to output to the terminal and run in the foreground.</p>
-
-<pre class="sh">
-$ $CLROOT/scripts/sw-worker -m 'http://localhost:8000' -p 8001 -b $CLROOT/store/ --staticbase $CLROOT/src/js/skyweb_worker/ 2>&1 2>${CLROOT}/logs/worker.log &
-</pre>
-
-<p>More workers can be launched in the same way, but on different ports. The above command will launch the worker on port 8001 and connect it to the master on port 8000. You can launch more workers on ports 8002, 8003 and so on.</p>
-
-
-<h2>Running a job</h2>
-
-<p>Then simply run:</p>
-
-<pre class="sh">
-$ $CLROOT/scripts/sw-job -m http://localhost:8000 $CLROOT/src/sw/script.sw
-</pre>
-
-<p>That should (hopefully!) come back with something like this:</p>
-
-<pre class="sh">
-default STARTED 1285777816.34
-default FINISHED_PARSING 1285777816.36
-default SUBMITTED_CONT 1285777816.38
-default SUBMITTED_JOB 1285777816.42
-default JOB_URL http://localhost:8000/browse/job/d794825a-cbe6-11df-b413-00e0814a4875
-default GOT_RESULT 1285777819.66
-SW2_ConcreteReference('d795275a-cbe6-11df-b413-00e0814a4875', &lt;skywriting.runtime.references.SWTaskOutputProvenance instance at 0x2014e18&gt;, 164, set(['ganymede.cl.cam.ac.uk:8001']))
-</pre>
-
-<p>If you open that URL in a browser, you should see the rudimentary web interface - try just exploring it a bit by clicking the links. Clicking on the root task link (first link), you should see a list of tasks with their current states.</p>
-
-<h2>Advanced stuff</h2>
-
-<p>You can edit the file in <samp class="code">$CLROOT/src/sw/pi.sw</samp> to see what a Skywriting script looks like, and you can change some of the variables in it (e.g. &quot;num_samples&quot;) to change the job parameters (more samples mean that each task does more work, more mappers mean more tasks).</p>
-
-<p>That should be it for now &ndash; please do get in touch with us if you are running into problems getting things work, or if you have any questions!</p>
+<ul>
+  <li><a href="/~dgm36/skywriting-tr.pdf">Implementation details
+  technical report</a></li>
+  <li><a href="/~dgm36/paper-osdi-submitted.pdf">OSDI submission</a></li>
+</ul>
 
 </body>
