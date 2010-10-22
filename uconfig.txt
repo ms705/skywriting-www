@@ -10,4 +10,4 @@ breadcrumbprefix=((href="http://www.cl.cam.ac.uk", "Computer Laboratory"),(href=
 installation.html,
 tutorial.html(navtitle="Running a job"),
 skywriting,
-
+internal(navtitle="Internal project info"),
